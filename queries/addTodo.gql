@@ -1,0 +1,5 @@
+mutation {
+    addTodo(username: "bryanburgers", task: "hire charlie") {
+        task
+    }
+}

@@ -1,0 +1,55 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  rusty-todos
+  Sample SAM Template for rusty-todos
+Globals:
+  Function:
+    Timeout: 3
+Resources:
+  TodoTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: todos
+      AttributeDefinitions:
+        - AttributeName: task 
+          AttributeType: S
+        - AttributeName: username 
+          AttributeType: S
+      KeySchema:
+        - AttributeName: username 
+          KeyType: HASH
+        - AttributeName: task
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+      ProvisionedThroughput:
+        ReadCapacityUnits: 0
+        WriteCapacityUnits: 0
+
+  GraphQLFunction:
+    Type: AWS::Serverless::Function 
+    Metadata:
+      BuildMethod: rust-cargolambda
+    Properties:
+      CodeUri: ./graphql
+      Handler: bootstrap    # Do not change, as this is the default executable name produced by Cargo Lambda
+      Runtime: provided.al2
+      Architectures:
+      - x86_64
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TodoTable 
+      FunctionUrlConfig:
+        AuthType: NONE
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName: !Ref TodoTable 
+
+Outputs:
+  GraphQLEndpoint:
+    Description: "The Lambda URL for my Graphql Schema"
+    Value:
+      Fn::GetAtt: GraphQLFunctionUrl.FunctionUrl
+  PutTable:
+    Description: DynamoDB table name
+    Value: !GetAtt TodoTable.Arn

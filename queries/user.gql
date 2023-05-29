@@ -1,0 +1,9 @@
+query {
+    user(username: "charliethomas") {
+        username
+        todos {
+            completed
+            title
+        }
+    }
+}
