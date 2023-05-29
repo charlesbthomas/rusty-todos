@@ -1,4 +1,4 @@
-use async_graphql::{SimpleObject, Object, Context, Error};
+use async_graphql::{SimpleObject, Object, Context, Error, EmptySubscription, Schema};
 use aws_sdk_dynamodb::Client;
 use crate::db::{add_todo, get_all_todos_for_user, mark_complete, get_all_todos, TodoItem};
 use itertools::Itertools;
@@ -79,4 +79,13 @@ impl Mutation {
     }
 }
 
+/**
+ * This function is used to build the schema for our GraphQL API, loading the DynamoDB client 
+ * from the environment and passing it to the schema as context data.
+ */
+pub async fn build_schema() -> Schema<Query, Mutation, EmptySubscription> {
+    let config = aws_config::load_from_env().await;
+    let dynamodb_client = Client::new(&config);
+    Schema::build(Query, Mutation, EmptySubscription).data(dynamodb_client).finish()
+}
 

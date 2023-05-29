@@ -1,61 +1,39 @@
-use aws_sdk_dynamodb::Client;
 use lambda_http::{run, Body, Error, Request, Response, http::StatusCode};
-
-use async_graphql::{
-    Request as GraphQlRequest, Schema, EmptySubscription,
-};
-
+use async_graphql::Request as GraphQlRequest;
 use lambda_runtime::service_fn;
-use schema::{Query, Mutation};
 
 mod schema;
 mod db;
 
-async fn function_handler(event: Request) -> Result<Response<Body>, String> {
+async fn function_handler(event: Request) -> Result<Response<Body>, Error> {
+    let schema = schema::build_schema().await;
 
-    let config = aws_config::load_from_env().await;
-    let dynamodb_client = Client::new(&config);
-
-    let schema = Schema::build(Query, Mutation, EmptySubscription).data(dynamodb_client).finish();
-
-    let query: Result<GraphQlRequest, String> = match event.into_body() {
-        Body::Empty => Err("oops".to_owned()),
+    let query: GraphQlRequest = match event.into_body() {
+        Body::Empty => {
+            // Return a 400 bad request response
+            let f = Response::builder()
+                .status(StatusCode::BAD_REQUEST)
+                .body(Body::Text("Bad Request".to_owned()))?;
+            return Ok(f)
+        },
         Body::Text(text) => {
-            serde_json::from_str::<GraphQlRequest>(&text).map_err(|_| "oops".to_owned())
+            serde_json::from_str::<GraphQlRequest>(&text)?
         }
         Body::Binary(binary) => {
-            serde_json::from_slice::<GraphQlRequest>(&binary).map_err(|_| "oops".to_owned())
+            serde_json::from_slice::<GraphQlRequest>(&binary)?
         }
     };
 
-    let query = match query {
-        Err(_) => {
-            return Response::builder()
-                .status(StatusCode::BAD_REQUEST)
-                .body(Body::Text("Bad Request".to_owned()))
-                .map_err(|_| "oops".to_owned())
-        }
-        Ok(query) => query,
-    };
+    let body = serde_json::to_string(&schema.execute(query).await)?;
 
-    let response_body = serde_json::to_string(&schema.execute(query).await)
-        .map_err(|_| "oops".to_owned())?;
+    let response = Response::builder().status(StatusCode::OK).body(Body::Text(body))?;
 
-    Response::builder()
-        .status(StatusCode::OK)
-        .body(Body::Text(response_body))
-        .map_err(|_|"oops".to_owned())
+    Ok(response)
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    println!("Starting server...");
-    tracing_subscriber::fmt()
-        .with_max_level(tracing::Level::INFO)
-        .init();
-
     run(service_fn(function_handler)).await?;
-
     Ok(())
 }
 
