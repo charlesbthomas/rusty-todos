@@ -1,0 +1,29 @@
+type CompleteResult {
+        username: String!
+        task: String!
+}
+
+type Mutation {
+        addTodo(username: String!, task: String!): Todo!
+        markTodoComplete(username: String!, task: String!): CompleteResult!
+}
+
+type Query {
+        user(username: String!): User!
+        users: [User!]!
+}
+
+type Todo {
+        task: String!
+        completed: Boolean!
+}
+
+type User {
+        username: String!
+        todos: [Todo!]!
+}
+
+schema {
+        query: Query
+        mutation: Mutation
+}

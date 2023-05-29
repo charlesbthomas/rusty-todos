@@ -97,3 +97,16 @@ pub async fn build_schema() -> Schema<Query, Mutation, EmptySubscription> {
         .data(dynamodb_client)
         .finish()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    #[test]
+    fn schema_gen() {
+        let schema = Schema::new(Query, Mutation, EmptySubscription);
+        println!("{}", schema.sdl());
+    }
+}
+
+
