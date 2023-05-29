@@ -1,6 +1,6 @@
 # Rusty Todos 🦀
 
-A fun little experiment for to help me brush up on my Rust.
+A fun little experiment to help me brush up on my Rust.
 
 This is a simple little GraphQL ToDo Api built with:
 
