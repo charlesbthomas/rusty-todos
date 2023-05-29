@@ -19,3 +19,8 @@ This is a simple little GraphQL ToDo Api built with:
 3) `sam deploy` (Follow the prompts)
 4) Query Away
 
+## If I have Time:
+- [ ] Refactor the graphql error handling to not be a hack... 🙈
+- [ ] Learn the best way to unit test this kind of code 🧪
+- [ ] Learn about better dependency injection practices with Rust 🏗️
+
